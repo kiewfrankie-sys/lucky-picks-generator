@@ -553,14 +553,16 @@
           doc.text(`PAGE ${pageNumber}`, pageWidth - 7, pageHeight - 4, { align: "right" });
         };
 
-        const drawBall = (x, y, value, kind) => {
+        const drawBall = (x, y, value, kind, customTileWidth) => {
           if (kind === "digit") {
+            const tileWidth = customTileWidth || 9;
+            const tileHeight = 13.5;
             doc.setFillColor(251, 113, 133);
-            doc.roundedRect(x, y, 9, 11, 2, 2, "F");
+            doc.roundedRect(x, y, tileWidth, tileHeight, 2.2, 2.2, "F");
             doc.setTextColor(59, 16, 24);
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.text(String(value), x + 4.5, y + 7.5, { align: "center" });
+            doc.setFontSize(12.5);
+            doc.text(String(value), x + tileWidth / 2, y + 9.2, { align: "center" });
           } else if (kind === "jackpot") {
             doc.setFillColor(251, 146, 60);
             doc.roundedRect(x, y, 22, 12, 2.5, 2.5, "F");
@@ -605,12 +607,15 @@
 
           if (activeConfig.type === "digits") {
             const digits = String(draw).split("");
-            const tileWidth = 9;
-            const gap = 2.2;
+            // Fit all digits inside the number area, then centre the complete group.
+            const numberAreaLeft = 38;
+            const numberAreaWidth = 53;
+            const gap = digits.length >= 6 ? 1.0 : 1.5;
+            const tileWidth = (numberAreaWidth - (digits.length - 1) * gap) / digits.length;
             const totalWidth = digits.length * tileWidth + (digits.length - 1) * gap;
-            let x = 50 + (39 - totalWidth) / 2;
+            let x = numberAreaLeft + (numberAreaWidth - totalWidth) / 2;
             digits.forEach(digit => {
-              drawBall(x, y + 4.5, digit, "digit");
+              drawBall(x, y + 3.25, digit, "digit", tileWidth);
               x += tileWidth + gap;
             });
           } else if (activeConfig.type === "jackpot") {
