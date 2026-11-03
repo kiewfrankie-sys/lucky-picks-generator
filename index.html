@@ -44,6 +44,25 @@
         #080e19;
     }
     .glass { background: rgba(15, 23, 42, .86); backdrop-filter: blur(16px); }
+    .theme-switch {
+      display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+      padding: 7px 9px; border: 1px solid #475569; border-radius: 999px;
+      background: #1e293b; color: #cbd5e1; cursor: pointer;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .theme-switch-icon { font-size: 13px; line-height: 1; }
+    .theme-switch-track {
+      position: relative; display: inline-block; width: 34px; height: 19px;
+      border-radius: 999px; background: #475569; transition: background .2s ease;
+    }
+    .theme-switch-thumb {
+      position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+      border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+      transition: transform .2s ease;
+    }
+    .theme-switch[aria-checked="true"] .theme-switch-track { background: #d97706; }
+    .theme-switch[aria-checked="true"] .theme-switch-thumb { transform: translateX(15px); }
+    .theme-switch:focus-visible { outline: 2px solid #fb923c; outline-offset: 3px; }
     /* Light theme overrides */
     body.light-theme {
       color-scheme: light;
@@ -59,7 +78,7 @@
     body.light-theme select,
     body.light-theme #displayBoard,
     body.light-theme #downloadBtn,
-    body.light-theme #themeToggle,
+    body.light-theme .theme-switch,
     body.light-theme .row-card {
       background-color: #f8fafc; border-color: #cbd5e1; color: #1e293b;
     }
@@ -72,6 +91,9 @@
     body.light-theme .row-card { background-color: #fff; }
     body.light-theme #generatedAt { color: #64748b; }
     body.light-theme .number-ball { box-shadow: 0 3px 9px rgba(15,23,42,.12); }
+    body.light-theme .theme-switch { background: #fff; border-color: #cbd5e1; color: #475569; }
+    body.light-theme .theme-switch-track { background: #cbd5e1; }
+    body.light-theme .theme-switch[aria-checked="true"] .theme-switch-track { background: #d97706; }
     .number-ball {
       display: inline-flex; align-items: center; justify-content: center;
       width: 42px; height: 42px; border-radius: 999px;
@@ -110,9 +132,11 @@
             <div class="inline-flex items-center gap-2 rounded-full border border-rose-400/20 bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300">
               <span aria-hidden="true">🎰</span> Lucky Pick Generator
             </div>
-            <button id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false"
-              class="rounded-full border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-slate-700">
-              ☀️ Light
+            <button id="themeToggle" type="button" role="switch" aria-checked="false"
+              aria-label="Dark mode" title="Toggle light and dark mode" class="theme-switch">
+              <span class="theme-switch-icon" aria-hidden="true">☀</span>
+              <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+              <span class="theme-switch-icon" aria-hidden="true">☾</span>
             </button>
           </div>
           <h1 class="text-3xl font-black leading-tight tracking-tight">
@@ -230,14 +254,21 @@
     let activeConfig = null;
     let generatedDate = null;
     let activeSource = "pseudo";
-    let isLightTheme = false;
+    let isLightTheme = localStorage.getItem("luckyPicksTheme") === "light";
+
+    function applyTheme() {
+      document.body.classList.toggle("light-theme", isLightTheme);
+      elements.themeToggle.setAttribute("aria-checked", String(isLightTheme));
+      elements.themeToggle.setAttribute("aria-label", isLightTheme ? "Light mode" : "Dark mode");
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", isLightTheme ? "#f1f5f9" : "#101827");
+    }
+
+    applyTheme();
 
     elements.themeToggle.addEventListener("click", () => {
       isLightTheme = !isLightTheme;
-      document.body.classList.toggle("light-theme", isLightTheme);
-      elements.themeToggle.textContent = isLightTheme ? "🌙 Dark" : "☀️ Light";
-      elements.themeToggle.setAttribute("aria-label", isLightTheme ? "Switch to dark theme" : "Switch to light theme");
-      elements.themeToggle.setAttribute("aria-pressed", String(isLightTheme));
+      localStorage.setItem("luckyPicksTheme", isLightTheme ? "light" : "dark");
+      applyTheme();
     });
 
     elements.source.addEventListener("change", () => {
@@ -494,52 +525,119 @@
 
       try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: "mm", format: "a4" });
-        const pageWidth = doc.internal.pageSize.getWidth();
 
-        doc.setFillColor(15, 23, 42);
-        doc.rect(0, 0, pageWidth, 39, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(19);
-        doc.text("LUCKY PICKS GENERATOR", 15, 18);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(226, 232, 240);
-        doc.text(activeConfig.name, 15, 27);
-        doc.text(`Generated: ${generatedDate ? generatedDate.toLocaleString() : ""}`, 15, 33);
+        // Compact portrait page designed for comfortable phone viewing.
+        const pageWidth = 100;
+        const pageHeight = 180;
+        const doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight], orientation: "portrait" });
 
-        let y = 57;
-        doc.setTextColor(51, 65, 85);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text("No.", 16, y);
-        doc.text("NUMBER COMBINATION", 34, y);
-        y += 8;
+        const drawHeader = (pageNumber) => {
+          doc.setFillColor(15, 23, 42);
+          doc.rect(0, 0, pageWidth, 37, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(13);
+          doc.text("LUCKY PICKS GENERATOR", 7, 12);
+          doc.setFontSize(10);
+          doc.setTextColor(251, 191, 36);
+          doc.text(activeConfig.name, 7, 21);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(226, 232, 240);
+          doc.text(doc.splitTextToSize(`Generated: ${generatedDate ? generatedDate.toLocaleString() : ""}`, 86), 7, 28);
+          doc.setFontSize(6.5);
+          doc.setTextColor(203, 213, 225);
+          doc.text(`SOURCE: ${activeSource === "randomorg" ? "RANDOM.ORG" : "PSEUDORANDOM BROWSER"}`, 7, 34);
+          doc.setTextColor(100, 116, 139);
+          doc.setFontSize(6.5);
+          doc.text(`PAGE ${pageNumber}`, pageWidth - 7, pageHeight - 4, { align: "right" });
+        };
+
+        const drawBall = (x, y, value, kind) => {
+          if (kind === "digit") {
+            doc.setFillColor(251, 113, 133);
+            doc.roundedRect(x, y, 9, 11, 2, 2, "F");
+            doc.setTextColor(59, 16, 24);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.text(String(value), x + 4.5, y + 7.5, { align: "center" });
+          } else if (kind === "jackpot") {
+            doc.setFillColor(251, 146, 60);
+            doc.roundedRect(x, y, 22, 12, 2.5, 2.5, "F");
+            doc.setTextColor(67, 20, 7);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text(String(value), x + 11, y + 8, { align: "center" });
+          } else {
+            doc.setFillColor(251, 191, 36);
+            doc.circle(x + 5, y + 5, 5, "F");
+            doc.setTextColor(23, 32, 51);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8.5);
+            doc.text(String(value).padStart(2, "0"), x + 5, y + 6.1, { align: "center" });
+          }
+        };
+
+        const rowsPerPage = 5;
+        let pageNumber = 1;
+        drawHeader(pageNumber);
 
         generatedDraws.forEach((draw, index) => {
-          if (y > 275) {
-            doc.addPage();
-            y = 20;
+          const rowOnPage = index % rowsPerPage;
+          if (index > 0 && rowOnPage === 0) {
+            doc.addPage([pageWidth, pageHeight], "portrait");
+            pageNumber++;
+            drawHeader(pageNumber);
           }
-          if (index % 2 === 0) {
-            doc.setFillColor(245, 247, 250);
-            doc.roundedRect(14, y - 5, pageWidth - 28, 10, 2, 2, "F");
-          }
-          doc.setFont("helvetica", "normal");
-          doc.setTextColor(100, 116, 139);
-          doc.text(String(index + 1).padStart(2, "0"), 16, y + 1);
+
+          const y = 43 + rowOnPage * 25;
+          doc.setFillColor(248, 250, 252);
+          doc.setDrawColor(226, 232, 240);
+          doc.roundedRect(6, y, 88, 20, 3, 3, "FD");
+
           doc.setFont("helvetica", "bold");
-          doc.setTextColor(30, 41, 59);
-          const formatted = Array.isArray(draw) ? draw.join("    ") : draw.split("").join("  ");
-          doc.text(formatted, 34, y + 1);
-          y += 11;
+          doc.setFontSize(7);
+          doc.setTextColor(100, 116, 139);
+          doc.text("No.", 9, y + 11);
+          doc.setFontSize(8);
+          doc.setTextColor(51, 65, 85);
+          doc.text(String(index + 1).padStart(2, "0"), 9, y + 16);
+
+          if (activeConfig.type === "digits") {
+            const digits = String(draw).split("");
+            const tileWidth = 9;
+            const gap = 2.2;
+            const totalWidth = digits.length * tileWidth + (digits.length - 1) * gap;
+            let x = 50 + (39 - totalWidth) / 2;
+            digits.forEach(digit => {
+              drawBall(x, y + 4.5, digit, "digit");
+              x += tileWidth + gap;
+            });
+          } else if (activeConfig.type === "jackpot") {
+            drawBall(47, y + 4, draw[0], "jackpot");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.text("+", 72, y + 12, { align: "center" });
+            drawBall(76, y + 4, draw[1], "jackpot");
+          } else {
+            const ballSize = 10;
+            const gap = 2.5;
+            const totalWidth = draw.length * ballSize + (draw.length - 1) * gap;
+            let x = 94 - totalWidth - 5;
+            draw.forEach(value => {
+              drawBall(x, y + 5, value, "lotto");
+              x += ballSize + gap;
+            });
+          }
         });
 
+        doc.setDrawColor(226, 232, 240);
+        doc.line(7, 169, 93, 169);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(120, 120, 120);
-        doc.text("For entertainment only. Random picks do not improve the odds of winning.", 15, 287);
+        doc.setFontSize(6.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("For entertainment only. Random picks do not improve the odds of winning.", 7, 174);
         const safeName = activeConfig.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
         doc.save(`${safeName}-lucky-picks.pdf`);
         elements.status.textContent = "PDF downloaded.";
