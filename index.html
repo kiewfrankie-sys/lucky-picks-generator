@@ -437,14 +437,16 @@
         draw.forEach((value, i) => {
           if (i > 0) {
             const separator = document.createElement("span");
-            separator.className = "px-1 text-xs font-bold uppercase text-slate-500";
+            separator.className = "px-2 text-lg font-bold text-slate-500";
             separator.textContent = "+";
             balls.appendChild(separator);
           }
-          const ball = document.createElement("span");
-          ball.className = "number-ball jackpot-ball";
-          ball.textContent = value;
-          balls.appendChild(ball);
+          for (const digit of value) {
+            const ball = document.createElement("span");
+            ball.className = "number-ball digit-ball";
+            ball.textContent = digit;
+            balls.appendChild(ball);
+          }
         });
       } else {
         draw.forEach(value => {
@@ -617,12 +619,26 @@
               x += tileWidth + gap;
             });
           } else if (activeConfig.type === "jackpot") {
-            drawBall(47, y + 4, draw[0], "jackpot");
+            // Match the plain, larger digit treatment used by 4D, 5D and 6D.
+            const digitWidth = 4.2;
+            const digitGap = 2.0;
+            const groupWidth = 4 * digitWidth + 3 * digitGap;
+            const plusGap = 7;
+            const totalWidth = groupWidth * 2 + plusGap;
+            let x = 38 + (53 - totalWidth) / 2;
+            for (const digit of draw[0]) {
+              drawBall(x, y + 2.0, digit, "digit", digitWidth);
+              x += digitWidth + digitGap;
+            }
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(8);
+            doc.setFontSize(10);
             doc.setTextColor(100, 116, 139);
-            doc.text("+", 72, y + 12, { align: "center" });
-            drawBall(76, y + 4, draw[1], "jackpot");
+            doc.text("+", x + (plusGap - digitGap) / 2, y + 12, { align: "center" });
+            x += plusGap;
+            for (const digit of draw[1]) {
+              drawBall(x, y + 2.0, digit, "digit", digitWidth);
+              x += digitWidth + digitGap;
+            }
           } else {
             const ballSize = 10;
             const gap = 2.5;
