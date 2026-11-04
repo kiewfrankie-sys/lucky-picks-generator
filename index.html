@@ -4,675 +4,370 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101827">
-  <meta name="description" content="Generate random lucky number combinations for selected lottery game formats.">
+  <meta name="description" content="Configure multiple lottery games and number combinations with Lucky Picks Generator.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Lucky Picks">
   <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-  <title>Lucky Pick Generator</title>
-
-  <!-- Tailwind CSS and jsPDF -->
+  <meta name="application-name" content="Lucky Picks Generator 2.0">
+  <title>Lucky Picks Generator 2.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <style>
     :root { color-scheme: dark; }
     html { -webkit-tap-highlight-color: transparent; }
-    body { min-height: 100svh; }
-    button, select { touch-action: manipulation; }
-    .app-shell { width: 100%; max-width: 760px; }
-    .control-panel { min-width: 0; }
-    .results-panel { min-width: 0; }
-    @media (max-width: 640px) {
-      .app-shell { border-radius: 1.35rem; }
-      .control-panel { padding: 1.15rem; gap: 1.25rem; }
-      .results-panel { min-height: 390px; padding: 1rem; }
-      .number-ball { width: 37px; height: 37px; font-size: .88rem; }
-      .digit-ball { min-width: 0; height: auto; padding: 0; font-size: 1.5rem; }
-      .jackpot-ball { min-width: 62px; height: 42px; }
-      #displayBoard { padding: .7rem; }
-    }
-    @media (min-width: 641px) {
-      .app-shell { max-width: 980px; }
-    }
-    body {
-      background:
-        radial-gradient(ellipse at 12% 8%, rgba(190, 48, 55, .20), transparent 34%),
-        radial-gradient(ellipse at 88% 92%, rgba(217, 119, 6, .13), transparent 32%),
-        #080e19;
-    }
-    .glass { background: rgba(15, 23, 42, .86); backdrop-filter: blur(16px); }
-    .theme-switch {
-      display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
-      padding: 7px 9px; border: 1px solid #475569; border-radius: 999px;
-      background: #1e293b; color: #cbd5e1; cursor: pointer;
-      transition: background .2s ease, border-color .2s ease;
-    }
-    .theme-switch-icon { font-size: 13px; line-height: 1; }
-    .theme-switch-track {
-      position: relative; display: inline-block; width: 34px; height: 19px;
-      border-radius: 999px; background: #475569; transition: background .2s ease;
-    }
-    .theme-switch-thumb {
-      position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
-      border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
-      transition: transform .2s ease;
-    }
-    .theme-switch[aria-checked="true"] .theme-switch-track { background: #d97706; }
-    .theme-switch[aria-checked="true"] .theme-switch-thumb { transform: translateX(15px); }
-    .theme-switch:focus-visible { outline: 2px solid #fb923c; outline-offset: 3px; }
-    /* Light theme overrides */
-    body.light-theme {
-      color-scheme: light;
-      background:
-        radial-gradient(ellipse at 12% 8%, rgba(244, 63, 94, .10), transparent 34%),
-        radial-gradient(ellipse at 88% 92%, rgba(217, 119, 6, .09), transparent 32%),
-        #f1f5f9;
-      color: #0f172a;
-    }
-    body.light-theme .glass { background: rgba(255,255,255,.92); border-color: #cbd5e1; }
-    body.light-theme .control-panel { border-color: #e2e8f0; }
-    body.light-theme .results-panel { color: #0f172a; }
-    body.light-theme select,
-    body.light-theme #displayBoard,
-    body.light-theme #downloadBtn,
-    body.light-theme .theme-switch,
-    body.light-theme .row-card {
-      background-color: #f8fafc; border-color: #cbd5e1; color: #1e293b;
-    }
-    body.light-theme label,
-    body.light-theme .text-slate-400,
-    body.light-theme .text-slate-500,
-    body.light-theme .text-slate-600 { color: #64748b !important; }
-    body.light-theme #boardGameLabel { color: #b45309; }
-    body.light-theme #displayBoard { background-color: #f8fafc; }
-    body.light-theme .row-card { background-color: #fff; }
-    body.light-theme #generatedAt { color: #64748b; }
-    body.light-theme .number-ball { box-shadow: 0 3px 9px rgba(15,23,42,.12); }
-    body.light-theme .theme-switch { background: #fff; border-color: #cbd5e1; color: #475569; }
-    body.light-theme .theme-switch-track { background: #cbd5e1; }
-    body.light-theme .theme-switch[aria-checked="true"] .theme-switch-track { background: #d97706; }
-    .number-ball {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 42px; height: 42px; border-radius: 999px;
-      color: #172033; font-weight: 800; font-size: .95rem;
-      background: linear-gradient(145deg, #fff7d6, #fbbf24);
-      box-shadow: 0 4px 12px rgba(0,0,0,.25), inset 0 1px 2px rgba(255,255,255,.8);
-      animation: popIn .24s ease-out both;
-    }
-    .digit-ball {
-      width: auto; min-width: 0; height: auto; padding: 0;
-      border-radius: 0; background: transparent;
-      color: #fb7185; box-shadow: none; font-size: 1.35rem;
-      line-height: 1.2; letter-spacing: .04em;
-    }
-    .jackpot-ball {
-      width: auto; min-width: 68px; height: 46px; padding: 0 10px;
-      border-radius: 12px; background: linear-gradient(145deg, #ffedd5, #fb923c);
-      color: #431407; font-size: 1.05rem; letter-spacing: .08em;
-    }
-    @keyframes popIn { from { transform: scale(.78); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    button:focus-visible, select:focus-visible { outline: 2px solid #fb923c; outline-offset: 3px; }
-    .scrollbar::-webkit-scrollbar { width: 7px; }
-    .scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 8px; }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
+    body { min-height: 100svh; background:radial-gradient(ellipse at 12% 8%,rgba(190,48,55,.2),transparent 34%),radial-gradient(ellipse at 88% 92%,rgba(217,119,6,.13),transparent 32%),#080e19; }
+    .glass { background:rgba(15,23,42,.88); backdrop-filter:blur(16px); }
+    .theme-switch {display:inline-flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid #475569;border-radius:999px;background:#1e293b;color:#cbd5e1}
+    .track {position:relative;display:inline-block;width:34px;height:19px;border-radius:999px;background:#475569}
+    .thumb {position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .2s}
+    .theme-switch[aria-checked="true"] .track{background:#d97706}
+    .theme-switch[aria-checked="true"] .thumb{transform:translateX(15px)}
+    .game-card {background:rgba(30,41,59,.65);border:1px solid #475569;border-radius:1rem}
+    button:focus-visible,select:focus-visible{outline:2px solid #fb923c;outline-offset:3px}
+    body.light-theme{color-scheme:light;background:#f1f5f9;color:#0f172a}
+    body.light-theme .glass{background:rgba(255,255,255,.94);border-color:#cbd5e1}
+    body.light-theme .game-card{background:#fff;border-color:#cbd5e1}
+    body.light-theme select,body.light-theme .field{background:#f8fafc;color:#1e293b;border-color:#cbd5e1}
+    body.light-theme .muted{color:#64748b!important}
+    body.light-theme .theme-switch{background:#fff;color:#475569;border-color:#cbd5e1}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
   </style>
 </head>
-
-<body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center p-4 py-8">
-    <section class="app-shell glass grid w-full overflow-hidden rounded-3xl border border-slate-700/70 shadow-2xl md:grid-cols-[minmax(280px,.85fr)_1.5fr]">
-      <!-- Controls -->
-      <aside class="control-panel flex flex-col justify-between gap-8 border-b border-slate-700/70 p-6 md:border-b-0 md:border-r md:p-8">
-        <div>
-          <div class="mb-5 flex items-center justify-between gap-3">
-            <div class="inline-flex items-center gap-2 rounded-full border border-rose-400/20 bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300">
-              <span aria-hidden="true">🎰</span> Lucky Pick Generator
-            </div>
-            <button id="themeToggle" type="button" role="switch" aria-checked="false"
-              aria-label="Dark mode" title="Toggle light and dark mode" class="theme-switch">
-              <span class="theme-switch-icon" aria-hidden="true">☀</span>
-              <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
-              <span class="theme-switch-icon" aria-hidden="true">☾</span>
-            </button>
-          </div>
-          <h1 class="text-3xl font-black leading-tight tracking-tight">
-            Your numbers.<br><span class="bg-gradient-to-r from-rose-400 to-amber-300 bg-clip-text text-transparent">Your lucky draw.</span>
-          </h1>
-          <p class="mt-3 text-sm leading-6 text-slate-400">
-            Generate random number combinations for selected lottery game formats.
-          </p>
-
-          <div class="mt-8 space-y-5">
-            <div>
-              <label for="gameSelect" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Select game</label>
-              <select id="gameSelect" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-white">
-                <option value="4d">Classic 4D</option>
-                <option value="4djp">4D Jackpot</option>
-                <option value="5d">5D</option>
-                <option value="6d">6D</option>
-                <option value="650">Star Toto 6/50</option>
-                <option value="655">Power Toto 6/55</option>
-                <option value="658">Supreme Toto 6/58</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="randomSource" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Random number source</label>
-              <select id="randomSource" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-white">
-                <option value="pseudo">Pseudorandom (browser)</option>
-                <option value="randomorg">RANDOM.ORG (atmospheric noise)</option>
-              </select>
-              <p id="sourceHint" class="mt-2 text-xs leading-5 text-slate-500">Generated locally using JavaScript's Math.random(). No external random-number service is contacted.</p>
-            </div>
-
-            <div>
-              <label for="drawCount" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Number of rows</label>
-              <div class="flex items-center rounded-xl border border-slate-700 bg-slate-800 p-1">
-                <button id="minusBtn" type="button" aria-label="Decrease number of rows" class="h-10 w-11 rounded-lg text-xl font-bold text-slate-300 transition hover:bg-slate-700">−</button>
-                <output id="drawCount" class="flex-1 text-center text-lg font-bold tabular-nums" aria-live="polite">5</output>
-                <button id="plusBtn" type="button" aria-label="Increase number of rows" class="h-10 w-11 rounded-lg text-xl font-bold text-slate-300 transition hover:bg-slate-700">+</button>
-              </div>
-              <p class="mt-2 text-xs text-slate-500">Choose between 1 and 20 rows.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <button id="generateBtn" type="button" class="w-full rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-4 text-sm font-extrabold tracking-wide text-white shadow-lg shadow-rose-950/40 transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60">
-            🎲 Generate numbers
-          </button>
-          <button id="downloadBtn" type="button" disabled class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-35">
-            ↓ Download PDF
-          </button>
-          <p id="status" class="min-h-5 text-center text-xs text-slate-400" role="status" aria-live="polite"></p>
-        </div>
-      </aside>
-
-      <!-- Results -->
-      <section class="results-panel flex min-h-[430px] flex-col p-5 md:p-8" aria-label="Generated number results">
+<body class="text-slate-100 antialiased">
+  <main class="mx-auto min-h-screen w-full max-w-3xl p-3 py-6 sm:p-6">
+    <section class="glass overflow-hidden rounded-3xl border border-slate-700/70 shadow-2xl">
+      <header class="border-b border-slate-700/70 p-5 sm:p-7">
         <div class="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[.2em] text-slate-500">Your results</p>
-            <h2 id="boardGameLabel" class="mt-1 text-lg font-bold text-amber-300">Waiting for your lucky pick</h2>
+          <span class="rounded-full border border-rose-400/20 bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300">🎰 Lucky Picks Generator 2.0</span>
+          <button id="themeToggle" type="button" role="switch" aria-checked="false" aria-label="Toggle light and dark mode" class="theme-switch">
+            <span aria-hidden="true">☀</span><span class="track"><span class="thumb"></span></span><span aria-hidden="true">☾</span>
+          </button>
+        </div>
+        <h1 class="text-3xl font-black tracking-tight sm:text-4xl">Configure your <span class="bg-gradient-to-r from-rose-400 to-amber-300 bg-clip-text text-transparent">lucky picks.</span></h1>
+        <p class="muted mt-3 max-w-xl text-sm leading-6 text-slate-400">Select multiple games, configure each independently, and generate your combinations.</p>
+      </header>
+
+      <section class="space-y-5 p-5 sm:p-7">
+        <div>
+          <label for="gameToAdd" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Add a game</label>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <select id="gameToAdd" class="field min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-white">
+              <option value="4d">Classic 4D</option>
+              <option value="4djp">4D Jackpot</option>
+              <option value="5d">5D</option>
+              <option value="6d">6D</option>
+              <option value="650">Star Toto 6/50</option>
+              <option value="655">Power Toto 6/55</option>
+              <option value="658">Supreme Toto 6/58</option>
+            </select>
+            <button id="addGame" type="button" class="rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-5 py-3 text-sm font-extrabold text-white shadow-lg transition hover:brightness-110">＋ Add game</button>
           </div>
-          <span id="rowCountLabel" class="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-400">0 rows</span>
+          <p class="muted mt-2 text-xs text-slate-500">Each game can be selected once. Configure between 1 and 20 combinations per game.</p>
         </div>
 
-        <div id="displayBoard" class="scrollbar flex max-h-[560px] flex-1 flex-col items-center justify-center gap-3 overflow-y-auto rounded-2xl border border-dashed border-slate-700 bg-slate-950/50 p-5 text-center text-sm text-slate-500">
-          <span class="text-4xl" aria-hidden="true">🍀</span>
-          <p>Your generated combinations will appear here.</p>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">My game selections</h2>
+            <p id="selectionCount" class="muted mt-1 text-xs text-slate-400">No games selected</p>
+          </div>
+          <button id="resetSelections" type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700">Clear all</button>
         </div>
 
-        <div class="mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-          <span id="randomSourceLabel">Source: Pseudorandom (browser)</span>
-          <span id="generatedAt">No draw generated yet</span>
+        <div id="gameCards" class="space-y-3" aria-live="polite"></div>
+
+        <div id="emptyState" class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/30 px-5 py-9 text-center">
+          <div class="text-4xl">🍀</div>
+          <p class="mt-3 font-semibold">No games selected yet</p>
+          <p class="muted mt-1 text-sm text-slate-400">Choose a game above and tap “Add game” to begin.</p>
         </div>
-        <p class="mt-3 text-[11px] leading-5 text-slate-600">
-          For entertainment only. These randomly generated combinations do not improve the odds of winning.
-          This tool is not affiliated with Sports Toto or any lottery operator.
-        </p>
+
+        <div class="rounded-2xl border border-rose-400/20 bg-rose-500/5 p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total combinations</p>
+              <p class="muted mt-1 text-xs text-slate-500">Sum of the row counts across selected games</p>
+            </div>
+            <p id="totalRows" class="text-3xl font-black tabular-nums text-rose-300">0</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <button id="generateAll" type="button" class="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-5 py-3 font-extrabold text-white shadow-lg transition hover:brightness-110 disabled:opacity-40">Generate All Selected</button>
+          <button id="clearResults" type="button" class="rounded-xl border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-700">Clear results</button>
+        </div>
+        <section id="resultsSection" class="hidden space-y-4" aria-live="polite">
+          <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">Your lucky picks</h2><span id="resultMeta" class="text-xs text-slate-400"></span></div>
+          <div id="results" class="space-y-4"></div>
+          <div class="flex justify-end pt-1">
+            <button id="exportPdf" type="button" class="rounded-xl bg-amber-500 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-lg transition hover:brightness-110">↓ Export consolidated PDF</button>
+          </div>
+        </section>
+        <p id="status" class="min-h-5 text-center text-xs text-slate-400" role="status" aria-live="polite"></p>
       </section>
+      <footer class="border-t border-slate-700/70 px-5 py-4 text-center text-[11px] leading-5 text-slate-500 sm:px-7">
+        For entertainment only. Randomly generated combinations do not improve the odds of winning. Not affiliated with Sports Toto.
+      </footer>
     </section>
   </main>
 
-  <script>
-    "use strict";
+<script>
+"use strict";
 
-    const gameConfigs = {
-      "4d":   { name: "Classic 4D", type: "digits", length: 4 },
-      "5d":   { name: "5D", type: "digits", length: 5 },
-      "6d":   { name: "6D", type: "digits", length: 6 },
-      "650":  { name: "Star Toto 6/50", type: "lotto", count: 6, max: 50 },
-      "4djp": { name: "4D Jackpot", type: "jackpot" },
-      "655":  { name: "Power Toto 6/55", type: "lotto", count: 6, max: 55 },
-      "658":  { name: "Supreme Toto 6/58", type: "lotto", count: 6, max: 58 }
-    };
+const GAMES = [
+  {id:"4d", name:"Classic 4D", detail:"4 digits", kind:"digits", length:4},
+  {id:"4djp", name:"4D Jackpot", detail:"Two 4-digit numbers", kind:"jackpot", length:4},
+  {id:"5d", name:"5D", detail:"5 digits", kind:"digits", length:5},
+  {id:"6d", name:"6D", detail:"6 digits", kind:"digits", length:6},
+  {id:"650", name:"Star Toto 6/50", detail:"6 numbers from 1–50", kind:"lotto", max:50},
+  {id:"655", name:"Power Toto 6/55", detail:"6 numbers from 1–55", kind:"lotto", max:55},
+  {id:"658", name:"Supreme Toto 6/58", detail:"6 numbers from 1–58", kind:"lotto", max:58}
+];
+const STORAGE_KEY = "luckyPicksV2Selections";
+const LEGACY_THEME_KEY = "luckyPicksTheme";
+const $ = id => document.getElementById(id);
+let selections = [];
+// Generated results intentionally live in memory only and disappear when the page session ends.
+let resultsByGame = new Map();
+let generating = new Set();
 
-    const elements = {
-      game: document.getElementById("gameSelect"),
-      themeToggle: document.getElementById("themeToggle"),
-      source: document.getElementById("randomSource"),
-      sourceHint: document.getElementById("sourceHint"),
-      count: document.getElementById("drawCount"),
-      minus: document.getElementById("minusBtn"),
-      plus: document.getElementById("plusBtn"),
-      generate: document.getElementById("generateBtn"),
-      download: document.getElementById("downloadBtn"),
-      board: document.getElementById("displayBoard"),
-      label: document.getElementById("boardGameLabel"),
-      rowCount: document.getElementById("rowCountLabel"),
-      status: document.getElementById("status"),
-      generatedAt: document.getElementById("generatedAt")
-    };
-
-    let drawCount = 5;
-    let generatedDraws = [];
-    let activeConfig = null;
-    let generatedDate = null;
-    let activeSource = "pseudo";
-    let isLightTheme = localStorage.getItem("luckyPicksTheme") === "light";
-
-    function applyTheme() {
-      document.body.classList.toggle("light-theme", isLightTheme);
-      elements.themeToggle.setAttribute("aria-checked", String(isLightTheme));
-      elements.themeToggle.setAttribute("aria-label", isLightTheme ? "Light mode" : "Dark mode");
-      document.querySelector('meta[name="theme-color"]').setAttribute("content", isLightTheme ? "#f1f5f9" : "#101827");
+function saveSelections() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(selections)); }
+  catch (error) { setStatus("Could not save selections on this device.", true); }
+}
+function setStatus(message, error=false) {
+  const node = $("status"); node.textContent = message;
+  node.className = `min-h-5 text-center text-xs ${error ? "text-rose-300" : "text-slate-400"}`;
+}
+function gameById(id) { return GAMES.find(game => game.id === id); }
+function secureRandomInt(min, max) {
+  const range = max - min + 1;
+  if (!Number.isSafeInteger(range) || range <= 0) throw new Error("Invalid random number range.");
+  const limit = Math.floor(0x100000000 / range) * range;
+  const buffer = new Uint32Array(1);
+  let value;
+  do { crypto.getRandomValues(buffer); value = buffer[0]; } while (value >= limit);
+  return min + (value % range);
+}
+function browserInteger(min, max) { return secureRandomInt(min, max); }
+async function randomOrgIntegers(count, min, max) {
+  const url = new URL("https://www.random.org/integers/");
+  url.search = new URLSearchParams({num:String(count),min:String(min),max:String(max),col:"1",base:"10",format:"plain",rnd:"new"}).toString();
+  let response;
+  try { response = await fetch(url.toString(), {cache:"no-store"}); }
+  catch (e) { throw new Error("RANDOM.ORG could not be reached from this browser. Check your connection or browser CORS support; no fallback was used."); }
+  if (!response.ok) throw new Error(`RANDOM.ORG returned HTTP ${response.status}. No fallback was used.`);
+  const body = await response.text();
+  const values = body.trim().split(/\s+/).map(Number);
+  if (values.length !== count || values.some(n => !Number.isInteger(n) || n < min || n > max)) {
+    throw new Error("RANDOM.ORG returned an invalid response. No fallback was used.");
+  }
+  return values;
+}
+async function getRandomValues(count, min, max, source) {
+  return source === "randomorg" ? randomOrgIntegers(count, min, max) : Array.from({length:count}, () => browserInteger(min,max));
+}
+function padNumber(n, width) { return String(n).padStart(width,"0"); }
+async function generateGame(game, config) {
+  const rows = [];
+  if (game.kind === "digits") {
+    const vals = await getRandomValues(config.rows, 0, 10 ** game.length - 1, config.source);
+    vals.forEach(n => rows.push({number:padNumber(n,game.length)}));
+  } else if (game.kind === "jackpot") {
+    const vals = await getRandomValues(config.rows * 2, 0, 9999, config.source);
+    for (let i=0;i<vals.length;i+=2) rows.push({first:padNumber(vals[i],4),second:padNumber(vals[i+1],4)});
+  } else {
+    // Generate six distinct values per row. RANDOM.ORG is queried for each row and
+    // only the missing unique values are requested again if a duplicate occurs.
+    for (let r=0;r<config.rows;r++) {
+      const picked = new Set();
+      let attempts = 0;
+      while (picked.size < 6 && attempts < 12) {
+        const missing = 6 - picked.size;
+        const batch = await getRandomValues(Math.max(missing, 6), 1, game.max, config.source);
+        batch.forEach(n => { if (picked.size < 6) picked.add(n); });
+        attempts++;
+      }
+      if (picked.size !== 6) throw new Error(`Could not obtain six unique numbers for ${game.name}. Please try again.`);
+      rows.push({numbers:[...picked].sort((a,b)=>a-b)});
     }
-
-    applyTheme();
-
-    elements.themeToggle.addEventListener("click", () => {
-      isLightTheme = !isLightTheme;
-      localStorage.setItem("luckyPicksTheme", isLightTheme ? "light" : "dark");
-      applyTheme();
+  }
+  return {gameId:game.id, rows, source:config.source, generatedAt:new Date()};
+}
+function render() {
+  const cards = $("gameCards"); cards.replaceChildren();
+  let total = 0;
+  selections.forEach(item => {
+    const game = gameById(item.gameId); if (!game) return; total += item.rows;
+    const card = document.createElement("article"); card.className = "game-card p-4 sm:p-5";
+    const top = document.createElement("div"); top.className = "flex items-start justify-between gap-3";
+    const titleWrap = document.createElement("div");
+    const title = document.createElement("h3"); title.className = "font-bold text-base"; title.textContent = game.name;
+    const detail = document.createElement("p"); detail.className = "muted mt-1 text-xs text-slate-400"; detail.textContent = game.detail;
+    titleWrap.append(title,detail);
+    const remove = document.createElement("button"); remove.type="button"; remove.className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700"; remove.textContent="Remove";
+    remove.setAttribute("aria-label",`Remove ${game.name}`);
+    remove.addEventListener("click",()=>{selections=selections.filter(x=>x.gameId!==item.gameId);resultsByGame.delete(item.gameId);saveSelections();render();renderResults();});
+    top.append(titleWrap,remove);
+    const controls=document.createElement("div"); controls.className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2";
+    const rowField=document.createElement("div"); const rowLabel=document.createElement("label"); rowLabel.className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400"; rowLabel.textContent="Number of combinations";
+    const rowControls=document.createElement("div"); rowControls.className="field flex items-center rounded-xl border border-slate-600 bg-slate-900/70 p-1";
+    const minus=document.createElement("button"); minus.type="button"; minus.className="h-10 w-11 rounded-lg text-xl font-bold hover:bg-slate-700"; minus.textContent="−"; minus.disabled=item.rows<=1; minus.setAttribute("aria-label",`Decrease ${game.name} combinations`);
+    const value=document.createElement("output"); value.className="flex-1 text-center text-lg font-bold tabular-nums"; value.textContent=item.rows;
+    const plus=document.createElement("button"); plus.type="button"; plus.className="h-10 w-11 rounded-lg text-xl font-bold hover:bg-slate-700"; plus.textContent="+"; plus.disabled=item.rows>=20; plus.setAttribute("aria-label",`Increase ${game.name} combinations`);
+    minus.addEventListener("click",()=>updateRows(item.gameId,-1)); plus.addEventListener("click",()=>updateRows(item.gameId,1)); rowControls.append(minus,value,plus); rowField.append(rowLabel,rowControls);
+    const sourceField=document.createElement("div"); const sourceLabel=document.createElement("label"); sourceLabel.className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400"; sourceLabel.textContent="Random number source"; sourceLabel.htmlFor=`source-${item.gameId}`;
+    const source=document.createElement("select"); source.id=`source-${item.gameId}`; source.className="field w-full rounded-xl border border-slate-600 bg-slate-900/70 px-3 py-3 text-sm font-semibold text-white";
+    source.innerHTML='<option value="pseudo">Pseudorandom (browser)</option><option value="randomorg">RANDOM.ORG (atmospheric noise)</option>'; source.value=item.source;
+    source.addEventListener("change",()=>{item.source=source.value;saveSelections();}); sourceField.append(sourceLabel,source); controls.append(rowField,sourceField);
+    const actions=document.createElement("div"); actions.className="mt-3 flex justify-end";
+    const generate=document.createElement("button"); generate.type="button"; generate.className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-bold text-white hover:bg-slate-600 disabled:opacity-40"; generate.textContent=generating.has(item.gameId)?"Generating…":"Generate this game"; generate.disabled=generating.has(item.gameId);
+    generate.addEventListener("click",()=>generateOne(item.gameId)); actions.append(generate); card.append(top,controls,actions); cards.append(card);
+  });
+  $("emptyState").classList.toggle("hidden",selections.length>0);
+  $("selectionCount").textContent=selections.length?`${selections.length} game${selections.length===1?"":"s"} selected`:"No games selected";
+  $("totalRows").textContent=total; $("addGame").disabled=selections.length===GAMES.length;
+  $("addGame").classList.toggle("opacity-40",selections.length===GAMES.length);
+  $("gameToAdd").querySelectorAll("option").forEach(o=>o.disabled=selections.some(x=>x.gameId===o.value));
+  $("generateAll").disabled=!selections.length||generating.size>0;
+}
+function updateRows(gameId,delta){const item=selections.find(x=>x.gameId===gameId);if(!item)return;item.rows=Math.max(1,Math.min(20,item.rows+delta));saveSelections();render();}
+function addGame(){const id=$("gameToAdd").value;if(selections.some(x=>x.gameId===id)||!gameById(id))return;selections.push({gameId:id,rows:5,source:"pseudo"});selections.sort((a,b)=>GAMES.findIndex(g=>g.id===a.gameId)-GAMES.findIndex(g=>g.id===b.gameId));saveSelections();render();const next=GAMES.find(g=>!selections.some(x=>x.gameId===g.id));if(next)$("gameToAdd").value=next.id;}
+function sourceLabel(source){return source==="randomorg"?"RANDOM.ORG":"Browser pseudorandom";}
+function renderResults(){
+  const host=$("results");host.replaceChildren();
+  const ordered=GAMES.filter(g=>resultsByGame.has(g.id));
+  $("resultsSection").classList.toggle("hidden",ordered.length===0);
+  $("resultMeta").textContent=ordered.length?`${ordered.length} game${ordered.length===1?"":"s"} generated`:"";
+  ordered.forEach(game=>{
+    const result=resultsByGame.get(game.id);const card=document.createElement("article");card.className="game-card overflow-hidden p-4 sm:p-5";
+    const head=document.createElement("div");head.className="mb-4 flex flex-wrap items-center justify-between gap-2";
+    const name=document.createElement("h3");name.className="font-bold";name.textContent=game.name;
+    const meta=document.createElement("span");meta.className="text-[11px] text-slate-400";meta.textContent=`${sourceLabel(result.source)} · ${result.rows.length} rows`;
+    head.append(name,meta);const list=document.createElement("div");list.className="space-y-3";
+    result.rows.forEach((row,index)=>{
+      const line=document.createElement("div");line.className="flex items-center gap-3";
+      const label=document.createElement("span");label.className="w-6 shrink-0 text-xs text-slate-500";label.textContent=String(index+1).padStart(2,"0");line.append(label);
+      if(game.kind==="digits"){
+        const digits=document.createElement("div");digits.className="flex flex-wrap gap-1.5 sm:gap-2 font-mono text-2xl font-black tracking-wider text-amber-300 sm:text-3xl";
+        [...row.number].forEach(d=>{const span=document.createElement("span");span.className="px-0.5 py-1 text-center";span.textContent=d;digits.append(span);});line.append(digits);
+      }else if(game.kind==="jackpot"){
+        const nums=document.createElement("div");nums.className="flex items-center gap-3 font-mono text-xl font-black tracking-wider text-amber-300 sm:text-2xl";
+        const a=document.createElement("span");a.textContent=row.first;const plus=document.createElement("span");plus.className="text-slate-400";plus.textContent="+";const b=document.createElement("span");b.textContent=row.second;nums.append(a,plus,b);line.append(nums);
+      }else{
+        const balls=document.createElement("div");balls.className="flex flex-wrap gap-1.5 sm:gap-2";
+        row.numbers.forEach(n=>{const ball=document.createElement("span");ball.className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-200/30 bg-gradient-to-b from-amber-200 to-amber-500 text-xs font-black text-slate-900 shadow sm:h-10 sm:w-10 sm:text-sm";ball.textContent=String(n);balls.append(ball);});line.append(balls);
+      }
+      list.append(line);
     });
+    const foot=document.createElement("div");foot.className="mt-4 flex justify-end";
+    const regen=document.createElement("button");regen.type="button";regen.className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700";regen.textContent="Regenerate game";regen.disabled=generating.has(game.id);regen.addEventListener("click",()=>generateOne(game.id));foot.append(regen);
+    card.append(head,list,foot);host.append(card);
+  });
+}
+async function generateOne(gameId){
+  const config=selections.find(x=>x.gameId===gameId);const game=gameById(gameId);if(!config||!game||generating.has(gameId))return;
+  generating.add(gameId);render();setStatus(`Generating ${game.name}…`);
+  try{const result=await generateGame(game,config);resultsByGame.set(gameId,result);setStatus(`${game.name} generated successfully.`);}
+  catch(error){resultsByGame.delete(gameId);setStatus(`${game.name}: ${error.message}`,true);}
+  finally{generating.delete(gameId);render();renderResults();}
+}
+async function generateAll(){if(!selections.length||generating.size)return;const configs=selections.map(x=>({...x}));
+  for(const config of configs){await generateOne(config.gameId);}
+  setStatus("Generation run completed. Check any game-specific error messages above.");
+}
+function pdfText(doc, text, x, y, options={}) {
+  doc.text(String(text), x, y, options);
+}
+function exportConsolidatedPdf() {
+  const ordered = GAMES.filter(game => resultsByGame.has(game.id));
+  if (!ordered.length) { setStatus("Generate at least one game before exporting a PDF.", true); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    setStatus("PDF library is unavailable. Check your internet connection and try again.", true); return;
+  }
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:"portrait", unit:"mm", format:"a4", compress:true});
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const left = 16, right = pageW - 16;
+    const generatedPages = ordered.length;
 
-    elements.source.addEventListener("change", () => {
-      elements.sourceHint.textContent = elements.source.value === "randomorg"
-        ? "Requests atmospheric-noise-based integers from RANDOM.ORG. Requires internet access; availability may depend on browser CORS and service quota."
-        : "Generated locally using JavaScript's Math.random(). No external random-number service is contacted.";
-    });
+    ordered.forEach((game, pageIndex) => {
+      if (pageIndex > 0) doc.addPage();
+      const result = resultsByGame.get(game.id);
+      const stamp = result.generatedAt instanceof Date ? result.generatedAt : new Date(result.generatedAt);
+      const dateText = Number.isNaN(stamp.getTime()) ? "Current session" : stamp.toLocaleString();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageW, 43, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      pdfText(doc,"LUCKY PICKS GENERATOR 2.0",left,13);
+      doc.setFontSize(21); pdfText(doc,game.name,left,25);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9);
+      doc.setTextColor(226,232,240);
+      pdfText(doc,`${result.rows.length} combinations  |  Source: ${sourceLabel(result.source)}`,left,33);
+      doc.setTextColor(100,116,139); doc.setFontSize(8);
+      pdfText(doc,`Generated: ${dateText}`,left,51);
 
-    // Pseudorandom source: Math.random() is a conventional PRNG.
-    function pseudoRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    // RANDOM.ORG HTTP Integer Generator. Requests are batched and validated.
-    async function fetchRandomOrgIntegers(total, min, max) {
-      const url = new URL("https://www.random.org/integers/");
-      url.search = new URLSearchParams({
-        num: String(total),
-        min: String(min),
-        max: String(max),
-        col: "1",
-        base: "10",
-        format: "plain",
-        rnd: "new"
-      }).toString();
-
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 120000);
-      try {
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          cache: "no-store",
-          signal: controller.signal
-        });
-        const body = await response.text();
-        if (!response.ok || body.trim().startsWith("Error:")) {
-          throw new Error(body.trim().slice(0, 240) || `RANDOM.ORG returned HTTP ${response.status}.`);
-        }
-
-        const values = body.trim().split(/\s+/).map(Number);
-        if (values.length !== total || values.some(value =>
-          !Number.isInteger(value) || value < min || value > max
-        )) {
-          throw new Error("RANDOM.ORG returned an incomplete or invalid response.");
-        }
-        return values;
-      } catch (error) {
-        if (error.name === "AbortError") {
-          throw new Error("RANDOM.ORG request timed out. Please try again.");
-        }
-        if (error instanceof TypeError) {
-          throw new Error("Could not connect to RANDOM.ORG. Your browser or network may be blocking the cross-origin request (CORS). No pseudorandom fallback was used.");
-        }
-        throw error;
-      } finally {
-        window.clearTimeout(timeout);
-      }
-    }
-
-    async function getRandomIntegers(total, min, max, source) {
-      if (source === "randomorg") {
-        return fetchRandomOrgIntegers(total, min, max);
-      }
-      return Array.from({ length: total }, () => pseudoRandomInt(min, max));
-    }
-
-    async function randomDigits(length, source) {
-      const digits = await getRandomIntegers(length, 0, 9, source);
-      return digits.join("");
-    }
-
-    async function randomUniqueNumbers(count, max, source) {
-      if (source === "randomorg") {
-        // A single larger request keeps calls batched. Duplicates are discarded
-        // within each row, as required for a 6-number lottery combination.
-        const batch = await fetchRandomOrgIntegers(1000, 1, max);
-        let cursor = 0;
-        const result = [];
-        while (result.length < count) {
-          const set = new Set();
-          while (set.size < count && cursor < batch.length) {
-            set.add(batch[cursor++]);
-          }
-          if (set.size < count) {
-            throw new Error("RANDOM.ORG returned too few usable unique values. Please generate again.");
-          }
-          result.push(Array.from(set).sort((a, b) => a - b));
-        }
-        return result;
-      }
-
-      const pool = Array.from({ length: max }, (_, i) => i + 1);
-      for (let i = 0; i < count; i++) {
-        const j = pseudoRandomInt(i, max - 1);
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return [pool.slice(0, count).sort((a, b) => a - b)];
-    }
-
-    async function createDraws(config, rows, source) {
-      if (config.type === "digits") {
-        const allDigits = await getRandomIntegers(rows * config.length, 0, 9, source);
-        return Array.from({ length: rows }, (_, i) =>
-          allDigits.slice(i * config.length, (i + 1) * config.length).join("")
-        );
-      }
-
-      if (config.type === "jackpot") {
-        const allDigits = await getRandomIntegers(rows * 8, 0, 9, source);
-        return Array.from({ length: rows }, (_, i) => {
-          const line = allDigits.slice(i * 8, (i + 1) * 8);
-          return [line.slice(0, 4).join(""), line.slice(4, 8).join("")];
-        });
-      }
-
-      if (config.type === "lotto") {
-        if (source === "randomorg") {
-          const batch = await fetchRandomOrgIntegers(1000, 1, config.max);
-          let cursor = 0;
-          return Array.from({ length: rows }, () => {
-            const set = new Set();
-            while (set.size < config.count && cursor < batch.length) {
-              set.add(batch[cursor++]);
-            }
-            if (set.size < config.count) {
-              throw new Error("RANDOM.ORG returned too few usable unique values. Please generate again.");
-            }
-            return Array.from(set).sort((a, b) => a - b);
+      const top = 65;
+      const bottom = pageH - 27;
+      const rowGap = Math.min(11.5, (bottom - top) / Math.max(result.rows.length,1));
+      const startY = top + Math.max(0,(bottom-top-result.rows.length*rowGap)/2) + rowGap*0.7;
+      result.rows.forEach((row,index) => {
+        const y = startY + index*rowGap;
+        doc.setTextColor(148,163,184); doc.setFont("helvetica","normal"); doc.setFontSize(8);
+        pdfText(doc,String(index+1).padStart(2,"0"),left,y);
+        if (game.kind === "digits") {
+          doc.setFont("courier","bold"); doc.setFontSize(game.length===6?22:25); doc.setTextColor(180,83,9);
+          // Digits are intentionally rendered as plain text without boxes.
+          pdfText(doc,row.number,left+17,y);
+        } else if (game.kind === "jackpot") {
+          doc.setFont("courier","bold"); doc.setFontSize(23); doc.setTextColor(180,83,9);
+          pdfText(doc,`${row.first}   +   ${row.second}`,left+17,y);
+        } else {
+          const ballD = 9.2, gap = 3.2;
+          const totalW = 6*ballD + 5*gap;
+          const x0 = (pageW-totalW)/2 + 5;
+          row.numbers.forEach((number,j) => {
+            const x = x0+j*(ballD+gap);
+            doc.setFillColor(245,190,70); doc.setDrawColor(180,120,25);
+            doc.circle(x+ballD/2,y-1.4,ballD/2,"FD");
+            doc.setTextColor(30,41,59); doc.setFont("helvetica","bold"); doc.setFontSize(9);
+            pdfText(doc,String(number),x+ballD/2,y+1.7,{align:"center"});
           });
         }
-        return Array.from({ length: rows }, () => {
-          const pool = Array.from({ length: config.max }, (_, i) => i + 1);
-          for (let i = 0; i < config.count; i++) {
-            const j = pseudoRandomInt(i, config.max - 1);
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-          }
-          return pool.slice(0, config.count).sort((a, b) => a - b);
-        });
-      }
-
-      throw new Error("Unsupported game configuration.");
-    }
-
-    function renderDraw(draw, index, config) {
-      const row = document.createElement("article");
-      row.className = "row-card flex w-full flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-3 sm:px-4";
-      row.style.animation = `popIn .22s ease-out ${index * 35}ms both`;
-
-      const number = document.createElement("span");
-      number.className = "w-7 shrink-0 text-xs font-bold text-slate-500";
-      number.textContent = String(index + 1).padStart(2, "0");
-      row.appendChild(number);
-
-      const balls = document.createElement("div");
-      balls.className = "flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2";
-
-      if (config.type === "digits") {
-        for (const digit of draw) {
-          const ball = document.createElement("span");
-          ball.className = "number-ball digit-ball";
-          ball.textContent = digit;
-          balls.appendChild(ball);
+        if (index < result.rows.length-1) {
+          doc.setDrawColor(226,232,240); doc.setLineWidth(0.2);
+          doc.line(left,y+3,right,y+3);
         }
-      } else if (config.type === "jackpot") {
-        draw.forEach((value, i) => {
-          if (i > 0) {
-            const separator = document.createElement("span");
-            separator.className = "px-2 text-lg font-bold text-slate-500";
-            separator.textContent = "+";
-            balls.appendChild(separator);
-          }
-          for (const digit of value) {
-            const ball = document.createElement("span");
-            ball.className = "number-ball digit-ball";
-            ball.textContent = digit;
-            balls.appendChild(ball);
-          }
-        });
-      } else {
-        draw.forEach(value => {
-          const ball = document.createElement("span");
-          ball.className = "number-ball";
-          ball.textContent = String(value).padStart(2, "0");
-          balls.appendChild(ball);
-        });
-      }
-
-      row.appendChild(balls);
-      return row;
-    }
-
-    function renderResults() {
-      elements.board.replaceChildren();
-      elements.board.className = "scrollbar flex max-h-[560px] flex-1 flex-col items-stretch justify-start gap-3 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/50 p-3 sm:p-4";
-      generatedDraws.forEach((draw, index) => {
-        elements.board.appendChild(renderDraw(draw, index, activeConfig));
       });
-      elements.label.textContent = activeConfig.name;
-      elements.rowCount.textContent = `${generatedDraws.length} ${generatedDraws.length === 1 ? "row" : "rows"}`;
-    }
 
-    function setBusy(isBusy) {
-      elements.generate.disabled = isBusy;
-      elements.generate.textContent = isBusy ? "Generating…" : "🎲 Generate numbers";
-    }
-
-    elements.plus.addEventListener("click", () => {
-      if (drawCount < 20) drawCount++;
-      elements.count.textContent = drawCount;
+      doc.setDrawColor(203,213,225); doc.line(left,pageH-21,right,pageH-21);
+      doc.setTextColor(100,116,139); doc.setFont("helvetica","normal"); doc.setFontSize(7.5);
+      pdfText(doc,"For entertainment only. Randomly generated combinations do not improve the odds of winning.",left,pageH-15);
+      pdfText(doc,`Page ${pageIndex+1} of ${generatedPages}`,right,pageH-8,{align:"right"});
     });
+    const filename = `Lucky-Picks-2.0-${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+    setStatus(`PDF exported: ${filename}`);
+  } catch (error) {
+    setStatus(`PDF export failed: ${error.message || "Unknown error"}`, true);
+  }
+}
 
-    elements.minus.addEventListener("click", () => {
-      if (drawCount > 1) drawCount--;
-      elements.count.textContent = drawCount;
-    });
-
-    elements.generate.addEventListener("click", () => {
-      setBusy(true);
-      elements.download.disabled = true;
-      elements.status.textContent = "Generating random combinations…";
-
-      // Defer work briefly so the busy state is painted before generation.
-      window.setTimeout(async () => {
-        try {
-          activeConfig = gameConfigs[elements.game.value];
-          const selectedSource = elements.source.value;
-          generatedDraws = await createDraws(activeConfig, drawCount, selectedSource);
-          generatedDate = new Date();
-          activeSource = selectedSource;
-          renderResults();
-          elements.generatedAt.textContent = generatedDate.toLocaleString();
-          document.getElementById("randomSourceLabel").textContent =
-            `Source: ${activeSource === "randomorg" ? "RANDOM.ORG" : "Pseudorandom (browser)"}`;
-          elements.download.disabled = false;
-          elements.status.textContent = `Ready — source: ${activeSource === "randomorg" ? "RANDOM.ORG" : "Pseudorandom browser generator"}.`;
-        } catch (error) {
-          generatedDraws = [];
-          elements.status.textContent = error.message || "Unable to generate numbers.";
-          elements.board.replaceChildren();
-          const message = document.createElement("p");
-          message.className = "text-sm text-rose-300";
-          message.textContent = error.message || "An unexpected error occurred.";
-          elements.board.appendChild(message);
-        } finally {
-          setBusy(false);
-        }
-      }, 30);
-    });
-
-    elements.download.addEventListener("click", () => {
-      if (!generatedDraws.length || !activeConfig) return;
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        elements.status.textContent = "PDF library could not be loaded. Check your internet connection and refresh the page.";
-        return;
-      }
-
-      try {
-        const { jsPDF } = window.jspdf;
-
-        // Compact portrait page designed for comfortable phone viewing.
-        const pageWidth = 100;
-        const pageHeight = 180;
-        const doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight], orientation: "portrait" });
-
-        const drawHeader = (pageNumber) => {
-          doc.setFillColor(15, 23, 42);
-          doc.rect(0, 0, pageWidth, 37, "F");
-          doc.setTextColor(255, 255, 255);
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(13);
-          doc.text("LUCKY PICKS GENERATOR", 7, 12);
-          doc.setFontSize(10);
-          doc.setTextColor(251, 191, 36);
-          doc.text(activeConfig.name, 7, 21);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7);
-          doc.setTextColor(226, 232, 240);
-          doc.text(doc.splitTextToSize(`Generated: ${generatedDate ? generatedDate.toLocaleString() : ""}`, 86), 7, 28);
-          doc.setFontSize(6.5);
-          doc.setTextColor(203, 213, 225);
-          doc.text(`SOURCE: ${activeSource === "randomorg" ? "RANDOM.ORG" : "PSEUDORANDOM BROWSER"}`, 7, 34);
-          doc.setTextColor(100, 116, 139);
-          doc.setFontSize(6.5);
-          doc.text(`PAGE ${pageNumber}`, pageWidth - 7, pageHeight - 4, { align: "right" });
-        };
-
-        const drawBall = (x, y, value, kind, customTileWidth) => {
-          if (kind === "digit") {
-            const tileWidth = customTileWidth || 9;
-            doc.setTextColor(251, 113, 133);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(17);
-            doc.text(String(value), x + tileWidth / 2, y + 10.5, { align: "center" });
-          } else if (kind === "jackpot") {
-            doc.setFillColor(251, 146, 60);
-            doc.roundedRect(x, y, 22, 12, 2.5, 2.5, "F");
-            doc.setTextColor(67, 20, 7);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.text(String(value), x + 11, y + 8, { align: "center" });
-          } else {
-            doc.setFillColor(251, 191, 36);
-            doc.circle(x + 5, y + 5, 5, "F");
-            doc.setTextColor(23, 32, 51);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(8.5);
-            doc.text(String(value).padStart(2, "0"), x + 5, y + 6.1, { align: "center" });
-          }
-        };
-
-        const rowsPerPage = 5;
-        let pageNumber = 1;
-        drawHeader(pageNumber);
-
-        generatedDraws.forEach((draw, index) => {
-          const rowOnPage = index % rowsPerPage;
-          if (index > 0 && rowOnPage === 0) {
-            doc.addPage([pageWidth, pageHeight], "portrait");
-            pageNumber++;
-            drawHeader(pageNumber);
-          }
-
-          const y = 43 + rowOnPage * 25;
-          doc.setFillColor(248, 250, 252);
-          doc.setDrawColor(226, 232, 240);
-          doc.roundedRect(6, y, 88, 20, 3, 3, "FD");
-
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7);
-          doc.setTextColor(100, 116, 139);
-          doc.text("No.", 9, y + 11);
-          doc.setFontSize(8);
-          doc.setTextColor(51, 65, 85);
-          doc.text(String(index + 1).padStart(2, "0"), 9, y + 16);
-
-          if (activeConfig.type === "digits") {
-            const digits = String(draw).split("");
-            // Fit all digits inside the number area, then centre the complete group.
-            const numberAreaLeft = 38;
-            const numberAreaWidth = 53;
-            const gap = digits.length >= 6 ? 2.0 : 2.8;
-            const tileWidth = (numberAreaWidth - (digits.length - 1) * gap) / digits.length;
-            const totalWidth = digits.length * tileWidth + (digits.length - 1) * gap;
-            let x = numberAreaLeft + (numberAreaWidth - totalWidth) / 2;
-            digits.forEach(digit => {
-              drawBall(x, y + 2.0, digit, "digit", tileWidth);
-              x += tileWidth + gap;
-            });
-          } else if (activeConfig.type === "jackpot") {
-            // Match the plain, larger digit treatment used by 4D, 5D and 6D.
-            const digitWidth = 4.2;
-            const digitGap = 2.0;
-            const groupWidth = 4 * digitWidth + 3 * digitGap;
-            const plusGap = 7;
-            const totalWidth = groupWidth * 2 + plusGap;
-            let x = 38 + (53 - totalWidth) / 2;
-            for (const digit of draw[0]) {
-              drawBall(x, y + 2.0, digit, "digit", digitWidth);
-              x += digitWidth + digitGap;
-            }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139);
-            doc.text("+", x + (plusGap - digitGap) / 2, y + 12, { align: "center" });
-            x += plusGap;
-            for (const digit of draw[1]) {
-              drawBall(x, y + 2.0, digit, "digit", digitWidth);
-              x += digitWidth + digitGap;
-            }
-          } else {
-            const ballSize = 10;
-            const gap = 2.5;
-            const totalWidth = draw.length * ballSize + (draw.length - 1) * gap;
-            let x = 94 - totalWidth - 5;
-            draw.forEach(value => {
-              drawBall(x, y + 5, value, "lotto");
-              x += ballSize + gap;
-            });
-          }
-        });
-
-        doc.setDrawColor(226, 232, 240);
-        doc.line(7, 169, 93, 169);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.5);
-        doc.setTextColor(100, 116, 139);
-        doc.text("For entertainment only. Random picks do not improve the odds of winning.", 7, 174);
-        const safeName = activeConfig.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        doc.save(`${safeName}-lucky-picks.pdf`);
-        elements.status.textContent = "PDF downloaded.";
-      } catch (error) {
-        elements.status.textContent = `PDF export failed: ${error.message}`;
-      }
-    });
-
-    // Enable installable PWA behaviour when hosted on HTTPS or localhost.
-    if ("serviceWorker" in navigator &&
-        (location.protocol === "https:" || location.hostname === "localhost")) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js")
-          .catch(error => console.warn("PWA service worker registration failed:", error));
-      });
-    }
-  </script>
+function loadSelections(){try{const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(Array.isArray(stored)){selections=stored.filter(x=>gameById(x.gameId)).map(x=>({gameId:x.gameId,rows:Math.max(1,Math.min(20,Number(x.rows)||5)),source:x.source==="randomorg"?"randomorg":"pseudo"}));selections=selections.filter((x,i,a)=>a.findIndex(y=>y.gameId===x.gameId)===i);selections.sort((a,b)=>GAMES.findIndex(g=>g.id===a.gameId)-GAMES.findIndex(g=>g.id===b.gameId));}}catch(e){selections=[];}}
+function applyTheme(){const light=localStorage.getItem(LEGACY_THEME_KEY)==="light";document.body.classList.toggle("light-theme",light);$("themeToggle").setAttribute("aria-checked",String(light));}
+$("addGame").addEventListener("click",addGame);
+$("resetSelections").addEventListener("click",()=>{if(!selections.length)return;selections=[];resultsByGame.clear();saveSelections();render();renderResults();setStatus("All game selections cleared.");});
+$("themeToggle").addEventListener("click",()=>{const light=!document.body.classList.contains("light-theme");document.body.classList.toggle("light-theme",light);localStorage.setItem(LEGACY_THEME_KEY,light?"light":"dark");$("themeToggle").setAttribute("aria-checked",String(light));});
+$("generateAll").addEventListener("click",generateAll);
+$("exportPdf").addEventListener("click",exportConsolidatedPdf);
+$("clearResults").addEventListener("click",()=>{resultsByGame.clear();renderResults();setStatus("Generated results cleared from this session.");});
+loadSelections();applyTheme();render();renderResults();
+if ("serviceWorker" in navigator && location.protocol !== "file:") { navigator.serviceWorker.register("./service-worker.js").catch(() => {}); }
+</script>
 </body>
 </html>

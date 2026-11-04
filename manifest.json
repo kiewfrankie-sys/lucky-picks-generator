@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Lucky Picks Generator",
-  "short_name": "Lucky Picks",
-  "description": "A shareable random number generator for selected lottery game formats.",
+  "name": "Lucky Picks Generator 2.0",
+  "short_name": "Lucky Picks 2.0",
+  "description": "Generate lucky number combinations across seven lottery games.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -20,7 +20,7 @@
       "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

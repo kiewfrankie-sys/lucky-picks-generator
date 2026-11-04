@@ -1,30 +1,25 @@
-# Lucky Picks Generator — Shareable PWA
+# Lucky Picks Generator 2.0 — Milestone 5
 
-## Files
-- `index.html`: the application
-- `manifest.json`: installable app metadata
-- `service-worker.js`: app-shell and best-effort CDN caching
-- `icons/`: Home Screen icons
+This is the final integration / PWA test build. It includes seven games, independent per-game configuration and random sources, session-only generated results, individual and all-game generation, and consolidated PDF export.
 
-## Publish using GitHub Pages
-1. Create a GitHub repository, e.g. `lucky-picks-generator`.
-2. Upload the contents of this folder to the repository root (not the ZIP itself).
-3. In GitHub, open **Settings → Pages**.
-4. Under **Build and deployment**, select **Deploy from a branch**.
-5. Select branch `main` and folder `/ (root)`, then Save.
-6. Wait for GitHub Pages to publish the site. Its URL will look like:
-   `https://YOUR-USERNAME.github.io/lucky-picks-generator/`
+## New version 2.0 app icon
 
-## Install on iPhone
-1. Open the published HTTPS URL in Safari.
-2. Tap Share → Add to Home Screen.
-3. If shown, enable **Open as Web App**, then tap Add.
-4. Launch it from the new Home Screen icon.
+The package includes a new purple-and-gold Lucky Picks Generator 2.0 icon in 180px, 192px, and 512px sizes. The manifest, browser tab icon, and iPhone Home Screen icon reference the new artwork.
 
-## Important notes
-- Hosting is required for sharing. This package is ready to publish, but it has not been uploaded to a public website.
-- PWA installation requires HTTPS (GitHub Pages provides HTTPS).
-- Open the site online at least once after deployment so the service worker can install and cache the app shell.
-- The service worker attempts to cache the Tailwind and jsPDF CDN scripts. Offline PDF export depends on those CDN resources having been cached successfully.
-- Pseudorandom generation runs locally. RANDOM.ORG requires internet access and may be blocked by browser CORS restrictions; this standalone front end does not include a server-side proxy.
-- Anyone with the published link can access the app. Do not put private information in this public repository.
+## Local testing
+
+1. Extract the ZIP.
+2. Open `index.html` in a modern browser.
+3. Test game selection, independent row counts and sources, generation, individual regeneration, Generate All, clearing results, and PDF export.
+4. Refresh: game selections and settings should persist; generated results should be cleared.
+5. For PWA testing, deploy to HTTPS (GitHub Pages), open the site, and install it from the browser. A local `file://` preview cannot fully test service-worker installation or offline behaviour.
+
+## Deployment to the existing GitHub repository
+
+Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the entire `icons` folder with this package's `icons` folder. Keep the existing repository and GitHub Pages URL. Commit all replacements together. The service-worker cache is `lucky-picks-v9`.
+
+## Notes
+
+- RANDOM.ORG access depends on browser/network CORS support. If it fails, the app reports an error and does not silently fall back to browser randomness.
+- Tailwind CSS and jsPDF are loaded from CDNs; complete offline operation of these external libraries is not guaranteed.
+- This app is for entertainment only. Randomly generated combinations do not improve the odds of winning.
