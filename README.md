@@ -16,7 +16,7 @@ The package includes a new purple-and-gold Lucky Picks Generator 2.0 icon in 180
 
 ## Deployment to the existing GitHub repository
 
-Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the entire `icons` folder with this package's `icons` folder. Keep the existing repository and GitHub Pages URL. Commit all replacements together. The service-worker cache is `lucky-picks-v10`.
+Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the entire `icons` folder with this package's `icons` folder. Keep the existing repository and GitHub Pages URL. Commit all replacements together. The service-worker cache is `lucky-picks-v11`.
 
 ## Notes
 
@@ -27,3 +27,11 @@ Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the enti
 ## PDF layout refinement
 
 The PDF layout uses a larger game header, larger combination typography, and row spacing distributed across the printable page. Number and ball sizes adapt to the selected row count (up to 20 rows) to preserve legibility and avoid overlap.
+
+
+## PDF ball alignment and spacing refinement
+
+- Toto balls are enlarged up to 24 mm and use most of the printable page width at low row counts.
+- Number text is vertically centred within each ball using a corrected jsPDF text-baseline offset.
+- Result rows use a compact centred block to reduce excessive gaps, with automatic scaling for 1–20 rows.
+- Service-worker cache updated to `lucky-picks-v11`.
