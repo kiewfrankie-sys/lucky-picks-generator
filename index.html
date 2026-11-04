@@ -30,7 +30,7 @@
       .control-panel { padding: 1.15rem; gap: 1.25rem; }
       .results-panel { min-height: 390px; padding: 1rem; }
       .number-ball { width: 37px; height: 37px; font-size: .88rem; }
-      .digit-ball { width: auto; min-width: 31px; height: 39px; padding: 0 6px; }
+      .digit-ball { min-width: 0; height: auto; padding: 0; font-size: 1.5rem; }
       .jackpot-ball { min-width: 62px; height: 42px; }
       #displayBoard { padding: .7rem; }
     }
@@ -103,9 +103,10 @@
       animation: popIn .24s ease-out both;
     }
     .digit-ball {
-      width: auto; min-width: 34px; height: 42px; padding: 0 7px;
-      border-radius: 10px; background: linear-gradient(145deg, #fee2e2, #fb7185);
-      color: #3b1018;
+      width: auto; min-width: 0; height: auto; padding: 0;
+      border-radius: 0; background: transparent;
+      color: #fb7185; box-shadow: none; font-size: 1.35rem;
+      line-height: 1.2; letter-spacing: .04em;
     }
     .jackpot-ball {
       width: auto; min-width: 68px; height: 46px; padding: 0 10px;
@@ -151,10 +152,10 @@
               <label for="gameSelect" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Select game</label>
               <select id="gameSelect" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-white">
                 <option value="4d">Classic 4D</option>
-                <option value="5d">Toto 5D</option>
-                <option value="6d">Toto 6D</option>
+                <option value="4djp">4D Jackpot</option>
+                <option value="5d">5D</option>
+                <option value="6d">6D</option>
                 <option value="650">Star Toto 6/50</option>
-                <option value="4djp">Sports Toto 4D Jackpot</option>
                 <option value="655">Power Toto 6/55</option>
                 <option value="658">Supreme Toto 6/58</option>
               </select>
@@ -224,10 +225,10 @@
 
     const gameConfigs = {
       "4d":   { name: "Classic 4D", type: "digits", length: 4 },
-      "5d":   { name: "Toto 5D", type: "digits", length: 5 },
-      "6d":   { name: "Toto 6D", type: "digits", length: 6 },
+      "5d":   { name: "5D", type: "digits", length: 5 },
+      "6d":   { name: "6D", type: "digits", length: 6 },
       "650":  { name: "Star Toto 6/50", type: "lotto", count: 6, max: 50 },
-      "4djp": { name: "Sports Toto 4D Jackpot", type: "jackpot" },
+      "4djp": { name: "4D Jackpot", type: "jackpot" },
       "655":  { name: "Power Toto 6/55", type: "lotto", count: 6, max: 55 },
       "658":  { name: "Supreme Toto 6/58", type: "lotto", count: 6, max: 58 }
     };
@@ -556,13 +557,10 @@
         const drawBall = (x, y, value, kind, customTileWidth) => {
           if (kind === "digit") {
             const tileWidth = customTileWidth || 9;
-            const tileHeight = 13.5;
-            doc.setFillColor(251, 113, 133);
-            doc.roundedRect(x, y, tileWidth, tileHeight, 2.2, 2.2, "F");
-            doc.setTextColor(59, 16, 24);
+            doc.setTextColor(251, 113, 133);
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(12.5);
-            doc.text(String(value), x + tileWidth / 2, y + 9.2, { align: "center" });
+            doc.setFontSize(17);
+            doc.text(String(value), x + tileWidth / 2, y + 10.5, { align: "center" });
           } else if (kind === "jackpot") {
             doc.setFillColor(251, 146, 60);
             doc.roundedRect(x, y, 22, 12, 2.5, 2.5, "F");
@@ -610,12 +608,12 @@
             // Fit all digits inside the number area, then centre the complete group.
             const numberAreaLeft = 38;
             const numberAreaWidth = 53;
-            const gap = digits.length >= 6 ? 1.0 : 1.5;
+            const gap = digits.length >= 6 ? 2.0 : 2.8;
             const tileWidth = (numberAreaWidth - (digits.length - 1) * gap) / digits.length;
             const totalWidth = digits.length * tileWidth + (digits.length - 1) * gap;
             let x = numberAreaLeft + (numberAreaWidth - totalWidth) / 2;
             digits.forEach(digit => {
-              drawBall(x, y + 3.25, digit, "digit", tileWidth);
+              drawBall(x, y + 2.0, digit, "digit", tileWidth);
               x += tileWidth + gap;
             });
           } else if (activeConfig.type === "jackpot") {
