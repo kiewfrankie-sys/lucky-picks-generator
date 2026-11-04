@@ -345,17 +345,18 @@ function exportConsolidatedPdf() {
           const gap = Math.min(4.2, Math.max(1.2, ballD * 0.16));
           const totalW = 6*ballD + 5*gap;
           const x0 = (pageW-totalW)/2;
-          const fontSize = Math.max(8, Math.min(25, ballD * 0.82));
+          // Use jsPDF's middle text baseline so the number is centred on
+          // the ball's actual centre, not visually pushed toward its lower edge.
+          // Increase the type size substantially while keeping it within the ball.
+          const fontSize = Math.max(8, Math.min(32, ballD * 1.18));
           row.numbers.forEach((number,j) => {
             const x = x0+j*(ballD+gap);
             const cx = x+ballD/2;
-            // jsPDF uses a text baseline; place it just below the circle
-            // centre so the glyph's visual centre aligns with the ball.
             doc.setFillColor(245,190,70); doc.setDrawColor(180,120,25);
             doc.circle(cx,y,ballD/2,"FD");
             doc.setTextColor(30,41,59); doc.setFont("helvetica","bold");
             doc.setFontSize(fontSize);
-            pdfText(doc,String(number),cx,y+fontSize*0.34,{align:"center"});
+            pdfText(doc,String(number),cx,y,{align:"center",baseline:"middle"});
           });
         }
         if (index < result.rows.length-1) {
