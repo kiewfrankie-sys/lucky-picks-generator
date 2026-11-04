@@ -38,3 +38,6 @@ The PDF layout uses a larger game header, larger combination typography, and row
 
 
 PDF refinement: increased Toto ball number typography to approximately 82% of ball diameter (with sensible minimum/maximum limits). Service-worker cache: lucky-picks-v12.
+
+
+PDF Toto-ball typography refinement: number labels use jsPDF middle baseline at the ball centre and a larger bold font (1.18 × ball diameter, capped at 32 pt). Service-worker cache: lucky-picks-v13.
