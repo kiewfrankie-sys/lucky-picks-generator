@@ -35,3 +35,6 @@ The PDF layout uses a larger game header, larger combination typography, and row
 - Number text is vertically centred within each ball using a corrected jsPDF text-baseline offset.
 - Result rows use a compact centred block to reduce excessive gaps, with automatic scaling for 1–20 rows.
 - Service-worker cache updated to `lucky-picks-v11`.
+
+
+PDF refinement: increased Toto ball number typography to approximately 82% of ball diameter (with sensible minimum/maximum limits). Service-worker cache: lucky-picks-v12.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "lucky-picks-v11";
+const CACHE_NAME = "lucky-picks-v12";
 const APP_SHELL = [
   "./",
   "./index.html",

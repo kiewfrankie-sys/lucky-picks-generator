@@ -345,7 +345,7 @@ function exportConsolidatedPdf() {
           const gap = Math.min(4.2, Math.max(1.2, ballD * 0.16));
           const totalW = 6*ballD + 5*gap;
           const x0 = (pageW-totalW)/2;
-          const fontSize = Math.max(6.5, Math.min(17, ballD * 0.48));
+          const fontSize = Math.max(8, Math.min(25, ballD * 0.82));
           row.numbers.forEach((number,j) => {
             const x = x0+j*(ballD+gap);
             const cx = x+ballD/2;
