@@ -300,48 +300,59 @@ function exportConsolidatedPdf() {
       const result = resultsByGame.get(game.id);
       const stamp = result.generatedAt instanceof Date ? result.generatedAt : new Date(result.generatedAt);
       const dateText = Number.isNaN(stamp.getTime()) ? "Current session" : stamp.toLocaleString();
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, pageW, 43, "F");
-      doc.setTextColor(255,255,255);
-      doc.setFont("helvetica","bold"); doc.setFontSize(9);
-      pdfText(doc,"LUCKY PICKS GENERATOR 2.0",left,13);
-      doc.setFontSize(21); pdfText(doc,game.name,left,25);
-      doc.setFont("helvetica","normal"); doc.setFontSize(9);
-      doc.setTextColor(226,232,240);
-      pdfText(doc,`${result.rows.length} combinations  |  Source: ${sourceLabel(result.source)}`,left,33);
-      doc.setTextColor(100,116,139); doc.setFontSize(8);
-      pdfText(doc,`Generated: ${dateText}`,left,51);
 
-      const top = 65;
-      const bottom = pageH - 27;
-      const rowGap = Math.min(11.5, (bottom - top) / Math.max(result.rows.length,1));
-      const startY = top + Math.max(0,(bottom-top-result.rows.length*rowGap)/2) + rowGap*0.7;
+      // Larger, more legible header with a clear visual hierarchy.
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageW, 49, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold"); doc.setFontSize(12);
+      pdfText(doc,"LUCKY PICKS GENERATOR 2.0",left,15);
+      doc.setFontSize(27); pdfText(doc,game.name,left,30);
+      doc.setFont("helvetica","normal"); doc.setFontSize(11);
+      doc.setTextColor(226,232,240);
+      pdfText(doc,`${result.rows.length} combinations  |  Source: ${sourceLabel(result.source)}`,left,41);
+      doc.setTextColor(100,116,139); doc.setFontSize(8.5);
+      pdfText(doc,`Generated: ${dateText}`,left,57);
+
+      // Distribute rows through the available body area instead of clustering
+      // them near the centre. Font/ball size scales with row count (1–20).
+      const top = 68;
+      const bottom = pageH - 29;
+      const rowGap = (bottom - top) / Math.max(result.rows.length,1);
+      const startY = top + rowGap/2;
+      const scale = Math.max(16, Math.min(58, rowGap * 1.45));
+
       result.rows.forEach((row,index) => {
         const y = startY + index*rowGap;
-        doc.setTextColor(148,163,184); doc.setFont("helvetica","normal"); doc.setFontSize(8);
+        doc.setTextColor(148,163,184); doc.setFont("helvetica","normal"); doc.setFontSize(Math.max(7,Math.min(9,rowGap*0.24)));
         pdfText(doc,String(index+1).padStart(2,"0"),left,y);
+
         if (game.kind === "digits") {
-          doc.setFont("courier","bold"); doc.setFontSize(game.length===6?22:25); doc.setTextColor(180,83,9);
-          // Digits are intentionally rendered as plain text without boxes.
-          pdfText(doc,row.number,left+17,y);
+          const digitSize = game.length===6 ? Math.min(48,scale*0.86) : scale;
+          doc.setFont("courier","bold"); doc.setFontSize(digitSize); doc.setTextColor(180,83,9);
+          // Plain digits; no boxes. The wider row zone and larger type make
+          // combinations the primary visual element on each page.
+          pdfText(doc,row.number,left+25,y+digitSize*0.10);
         } else if (game.kind === "jackpot") {
-          doc.setFont("courier","bold"); doc.setFontSize(23); doc.setTextColor(180,83,9);
-          pdfText(doc,`${row.first}   +   ${row.second}`,left+17,y);
+          doc.setFont("courier","bold"); doc.setFontSize(Math.min(54,scale*0.94)); doc.setTextColor(180,83,9);
+          pdfText(doc,`${row.first}   +   ${row.second}`,left+25,y+scale*0.08);
         } else {
-          const ballD = 9.2, gap = 3.2;
+          const ballD = Math.max(9.5, Math.min(15, rowGap*0.38));
+          const gap = 3.0;
           const totalW = 6*ballD + 5*gap;
-          const x0 = (pageW-totalW)/2 + 5;
+          const x0 = (pageW-totalW)/2;
           row.numbers.forEach((number,j) => {
             const x = x0+j*(ballD+gap);
             doc.setFillColor(245,190,70); doc.setDrawColor(180,120,25);
-            doc.circle(x+ballD/2,y-1.4,ballD/2,"FD");
-            doc.setTextColor(30,41,59); doc.setFont("helvetica","bold"); doc.setFontSize(9);
-            pdfText(doc,String(number),x+ballD/2,y+1.7,{align:"center"});
+            doc.circle(x+ballD/2,y-ballD*0.43,ballD/2,"FD");
+            doc.setTextColor(30,41,59); doc.setFont("helvetica","bold");
+            doc.setFontSize(Math.max(7,Math.min(15,ballD*0.88)));
+            pdfText(doc,String(number),x+ballD/2,y+ballD*0.10,{align:"center"});
           });
         }
         if (index < result.rows.length-1) {
           doc.setDrawColor(226,232,240); doc.setLineWidth(0.2);
-          doc.line(left,y+3,right,y+3);
+          doc.line(left,y+rowGap*0.43,right,y+rowGap*0.43);
         }
       });
 

@@ -16,10 +16,14 @@ The package includes a new purple-and-gold Lucky Picks Generator 2.0 icon in 180
 
 ## Deployment to the existing GitHub repository
 
-Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the entire `icons` folder with this package's `icons` folder. Keep the existing repository and GitHub Pages URL. Commit all replacements together. The service-worker cache is `lucky-picks-v9`.
+Replace `index.html`, `manifest.json`, and `service-worker.js`; replace the entire `icons` folder with this package's `icons` folder. Keep the existing repository and GitHub Pages URL. Commit all replacements together. The service-worker cache is `lucky-picks-v10`.
 
 ## Notes
 
 - RANDOM.ORG access depends on browser/network CORS support. If it fails, the app reports an error and does not silently fall back to browser randomness.
 - Tailwind CSS and jsPDF are loaded from CDNs; complete offline operation of these external libraries is not guaranteed.
 - This app is for entertainment only. Randomly generated combinations do not improve the odds of winning.
+
+## PDF layout refinement
+
+The PDF layout uses a larger game header, larger combination typography, and row spacing distributed across the printable page. Number and ball sizes adapt to the selected row count (up to 20 rows) to preserve legibility and avoid overlap.
